@@ -110,9 +110,9 @@ def main():
     t = threading.Thread(target=run_schedule, daemon=True)
     t.start()
     
-    # 啟動 Flask 伺服器來監聽 Port 5000
-    print("Starting Flask web server on port 5000...")
-    app.run(host="0.0.0.0", port=5000)
+    # 啟動 Flask 伺服器來監聽 Port 5001
+    print("Starting Flask web server on port 5001...")
+    app.run(host="0.0.0.0", port=5001)
 
 if __name__ == "__main__":
     main()

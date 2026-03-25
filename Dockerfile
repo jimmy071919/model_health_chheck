@@ -7,8 +7,8 @@ WORKDIR /app
 # 將目前目錄的文件複製到容器中
 COPY . /app
 
-# 因為你習慣使用 uv，我們也可以安裝 uv 來加速安裝相依套件 (可選)，或直接使用 pip
-RUN pip install --no-cache-dir requests schedule python-dotenv
+# 安裝需要的套件包含 flask
+RUN pip install --no-cache-dir requests schedule python-dotenv flask
 
 # 執行主程式
 CMD ["python", "main.py"]
