@@ -18,7 +18,7 @@ def send_alert(message_text):
         print("Error: Channel_access_token not found in .env")
         return
 
-    print("API is down or failed, sending LINE broadcast message...")
+    print(f"Sending LINE broadcast message: {message_text}")
     url = "https://api.line.me/v2/bot/message/broadcast"
     headers = {
         "Content-Type": "application/json",
@@ -36,9 +36,9 @@ def send_alert(message_text):
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=10)
         if response.status_code == 200:
-            print("Alert sent successfully.")
+            print("Message sent successfully.")
         else:
-            print(f"Failed to send alert: {response.text}")
+            print(f"Failed to send message: {response.text}")
     except Exception as e:
         print(f"Error sending LINE message: {str(e)}")
 
@@ -71,17 +71,48 @@ def test_url():
         alert_msg = f"Model API Request Error.\nError: Connection failed or timeout.\nURL: {URL}"
         send_alert(alert_msg)
 
-def main():
-    print("Starting model health check bot...")
+def report_status():
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Reporting bot status...")
+    send_alert("機器人運作正常")
+
+import threading
+from flask import Flask, request
+
+app = Flask(__name__)
+
+def run_schedule():
+    print("Starting model health check bot scheduling...")
     # 啟動時先執行一次測試
     test_url()
     
-    # 設定每 1 小時執行一次
+    # 設定每 1 小時檢查一次 API
     schedule.every(1).hours.do(test_url)
+    
+    # 設定每 5 小時回報一次狀態
+    schedule.every(5).hours.do(report_status)
     
     while True:
         schedule.run_pending()
         time.sleep(1)
+
+@app.route("/callback", methods=["POST"])
+def callback():
+    # 接收來自 LINE 的 webhook 測試或訊息
+    print("Received callback request from LINE")
+    return "OK", 200
+
+@app.route("/", methods=["GET"])
+def home():
+    return "Model Health Check Bot is running."
+
+def main():
+    # 建立一個背景執行緒來跑原本的定時檢查 (這樣才不會擋住 Web 伺服器)
+    t = threading.Thread(target=run_schedule, daemon=True)
+    t.start()
+    
+    # 啟動 Flask 伺服器來監聽 Port 5000
+    print("Starting Flask web server on port 5000...")
+    app.run(host="0.0.0.0", port=5000)
 
 if __name__ == "__main__":
     main()
