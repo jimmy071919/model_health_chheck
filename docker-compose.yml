@@ -6,6 +6,6 @@ services:
     container_name: model-health-bot
     restart: always # 如果發生崩潰或重啟機器，會自動重啟容器
     ports:
-      - "5000:5000"
+      - "5001:5001"
     env_file:
       - .env # 會自動讀取並載入你的 .env 到容器中
