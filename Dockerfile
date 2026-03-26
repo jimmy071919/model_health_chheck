@@ -1,6 +1,9 @@
 # 使用官方的 Python 3.11 基礎輕量化映像
 FROM python:3.11-slim
 
+# 強制 Python 即時輸出 log 到終端機，避免被系統緩衝 (Buffered) 吃掉
+ENV PYTHONUNBUFFERED=1
+
 # 設定工作目錄
 WORKDIR /app
 
