@@ -11,7 +11,10 @@ CHANNEL_SECRET = os.getenv("Channel_secret")
 MODEL_TOKEN = os.getenv("model_token")
 
 URL = "https://oneapi.dev-serve.me/v1/chat/completions"
-MODEL = "GPT-5"
+MODEL_LIST = [
+    {"name": "GPT-5", "model": "GPT-5"},
+    {"name": "Claude-Sonnet-4.6", "model": "claude-sonnet-4.6"}
+]
 
 def send_alert(message_text):
     if not CHANNEL_ACCESS_TOKEN:
@@ -43,7 +46,7 @@ def send_alert(message_text):
         print(f"Error sending LINE message: {str(e)}")
 
 def test_url():
-    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Checking API status...")
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Checking API status for all models...")
     if not MODEL_TOKEN:
         print("Error: model_token not found in .env")
         return
@@ -52,24 +55,29 @@ def test_url():
         "Authorization": f"Bearer {MODEL_TOKEN}",
         "Content-Type": "application/json"
     }
-    payload = {
-        "model": MODEL,
-        "messages": [
-            {"role": "user", "content": "health check"}
-        ],
-        "max_tokens": 5
-    }
-
-    try:
-        response = requests.post(URL, headers=headers, json=payload, timeout=30)
-        if response.status_code == 200:
-            print("API test passed, no message sent.")
-        else:
-            alert_msg = f"Model API Failed.\nStatus Code: {response.status_code}\nModel: {MODEL}"
+    all_passed = True
+    for model_info in MODEL_LIST:
+        payload = {
+            "model": model_info["model"],
+            "messages": [
+                {"role": "user", "content": "health check"}
+            ],
+            "max_tokens": 5
+        }
+        try:
+            response = requests.post(URL, headers=headers, json=payload, timeout=30)
+            if response.status_code == 200:
+                print(f"API test passed for {model_info['name']}.")
+            else:
+                alert_msg = f"Model API Failed.\nStatus Code: {response.status_code}\nModel: {model_info['name']}"
+                send_alert(alert_msg)
+                all_passed = False
+        except requests.exceptions.RequestException:
+            alert_msg = f"Model API Request Error.\nError: Connection failed or timeout.\nModel: {model_info['name']}\nURL: {URL}"
             send_alert(alert_msg)
-    except requests.exceptions.RequestException:
-        alert_msg = f"Model API Request Error.\nError: Connection failed or timeout.\nURL: {URL}"
-        send_alert(alert_msg)
+            all_passed = False
+    if all_passed:
+        print("All model API tests passed, no message sent.")
 
 def report_status():
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Reporting bot status...")
