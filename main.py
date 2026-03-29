@@ -12,7 +12,7 @@ MODEL_TOKEN = os.getenv("model_token")
 
 URL = "https://oneapi.dev-serve.me/v1/chat/completions"
 MODEL_LIST = [
-    {"name": "GPT-5", "model": "GPT-5"},
+    {"name": "gpt-40-mini", "model": "gpt-40-mini"},
     {"name": "Claude-Sonnet-4.6", "model": "claude-sonnet-4.6"}
 ]
 
